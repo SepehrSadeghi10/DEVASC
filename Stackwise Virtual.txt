@@ -1,0 +1,44 @@
+Stackwise-Virtual Configuration
+===================================================
+
+<<<<<<<<<<<<<<< SW-1 >>>>>>>>>>>>>>>>>
+conf t
+!
+stackwise-virtual
+ domain 100
+exit
+!
+int ra te1/0/47-48
+ stackwise-virtual link 1
+exit
+!
+int te1/0/46
+ stackwise-virtual dual-active-detection
+exit
+!
+end
+!
+wr
+!
+reload
+
+<<<<<<<<<<<<<<< SW-2 >>>>>>>>>>>>>>>>>
+conf t
+!
+stackwise-virtual
+ domain 100
+exit
+!
+int ra te1/0/47-48
+ stackwise-virtual link 1
+exit
+!
+int te1/0/46
+ stackwise-virtual dual-active-detection
+exit
+!
+end
+!
+wr
+!
+reload

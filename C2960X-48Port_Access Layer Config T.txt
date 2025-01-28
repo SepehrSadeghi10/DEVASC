@@ -1,0 +1,273 @@
+***C2960X-48Port_Access Layer Config Template***
+================================================
+
+Initial Configuration for Admin Remote Access
+================================================
+conf t
+!
+hostname HOSTNAME
+!
+ip domain-name DOMAIN
+!
+username LOCAL_USERNAME privilege 1 algorithm-type scrypt secret SECRET
+!
+enable algorithm-type scrypt secret SECRET
+!
+clock timezone TEH 3 30
+!
+clock no summer-time
+!
+end
+!
+clock set HH:MM:SS DAY MONTH YEAR
+!
+conf t
+!
+crypto key gen rsa modulus KEY_SIZE
+!
+ip ssh version 2
+!
+ip ssh authentication-retries RETRY_NUM
+!
+ip ssh time-out SECONDS
+!
+aaa new-model
+!
+tacacs server SERVER_NAME_1
+ address ipv4 SERVER_IP_ADDRESS
+ key KEY_STRING
+ port PORT_NUM
+exit
+!
+tacacs server SERVER_NAME_2
+ address ipv4 SERVER_IP_ADDRESS
+ key KEY_STRING
+ port PORT_NUM
+exit
+!
+aaa group server tacacs+ TACACS_SERVER_GROUP_NAME
+ server name SERVER_NAME_1
+ server name SERVER_NAME_2
+ ip tacacs source-interface INTERFACE
+exit
+!
+aaa authentication login default group TACACS_SERVER_GROUP_NAME local
+aaa authentication enable default group TACACS_SERVER_GROUP_NAME enable
+aaa authorization exec default group TACACS_SERVER_GROUP_NAME if-authenticated
+aaa authorization console
+aaa authorization config-commands
+aaa authorization commands 0 default group TACACS_SERVER_GROUP_NAME if-authenticated
+aaa authorization commands 1 default group TACACS_SERVER_GROUP_NAME if-authenticated
+aaa authorization commands 15 default group TACACS_SERVER_GROUP_NAME if-authenticated
+aaa accounting exec default start-stop group TACACS_SERVER_GROUP_NAME
+aaa accounting commands 0 default start-stop group TACACS_SERVER_GROUP_NAME
+aaa accounting commands 1 default start-stop group TACACS_SERVER_GROUP_NAME
+aaa accounting commands 15 default start-stop group TACACS_SERVER_GROUP_NAME
+!
+ip access-list standard SSH_ACL_NAME
+ 10 permit host IP_ADDRESS_1
+ 20 permit host IP_ADDRESS_2
+ 30 permit host IP_ADDRESS_3
+ ...
+ 1000 deny any log
+exit
+!
+line console 0
+ logging-synchronous
+ exec-timeout MIN SECOND
+!
+line vty 0 15
+ exec-timeout 5 0
+ transport input ssh
+ access-class SSH_ACL_NAME in
+exit
+!
+================================================
+
+Layer 2 Configuration
+================================================
+conf t
+!
+spanning-tree mode rapid-pvst
+!
+vtp domain VTP_DOMAIN_NAME
+vtp version 3
+vtp mode client
+vtp password PASSWORD
+!
+ip dhcp snooping
+ip dhcp snooping vlan VLAN_IDs
+no ip dhcp snooping information option
+!
+ip arp inspection vlan VLAN_IDs
+!
+int UPLINK_INTERFACE_1
+ des DESCRIPTION
+ udld port
+ spanning-tree guard loop
+ channel-group GROUP_NUM mode active
+!
+int UPLINK_INTERFACE_2
+ des DESCRIPTION
+ udld port
+ spanning-tree guard loop
+ channel-group GROUP_NUM mode active
+!
+int PORTCHANNEL_INTERFACE
+ des DESCRIPTION
+ sw mode trunk
+ sw trunk native vlan 66
+ sw nonegotiate
+ ip dhcp snooping trust
+ ip arp inspection trust
+!
+int ENDPOINT_INTERFACE
+ des DESCRIPTION
+ sw host
+ sw access vlan VLAN_ID
+ sw voice vlan VOICE_VLAN_ID
+ sw nonegotiate
+ sw port-security
+ sw port-security max MAX_NUM
+ sw port-security mac sticky
+ sw port-security violation restrict
+ spanning-tree bpduguard enable
+ ip dhcp snooping limit rate PPS
+ no vtp
+ no lldp transmit
+ no lldp receive
+exit
+!
+================================================
+
+Layer 3 Configuration
+================================================
+conf t
+!
+int INTERFACE
+ des DESCRIPTION
+ ip address ADDRESS MASK
+exit
+!
+ip default-gateway GATEWAY_ADDRESS
+!
+ip ssh source-interface INTERFACE
+!
+================================================
+
+IP Services Configuration
+================================================
+conf t
+!
+ntp server SERVER_IP_ADDRESS
+!
+ntp source INTERFACE
+!
+ip ftp username USERNAME
+!
+ip ftp password PASSWORD
+!
+archive
+ log config
+  logging enable
+  logging size SIZE
+  notify syslog contenttype plaintext
+  hidekeys
+ path ftp://SERVER_ADDRESS/DIRECTORY/$h-$t
+ write-memory
+ time-period MINUTES
+!
+logging buffered 64000
+!
+logging host SERVER_ADDRESS
+!
+logging host SERVER_ADDRESS transport udp port PORT_NUM
+!
+logging trap informational
+!
+logging source-interface INTERFACE
+!
+service timestamps log datetime localtime msec year
+!
+service sequence-numbers
+!
+login on-success log
+!
+login on-failure log
+!
+ip ssh logging events
+!
+ip access-list standard SNMP_ACL_NAME
+ 10 permit host IP_ADDRESS_1
+ 20 permit host IP_ADDRESS_2
+ 30 permit host IP_ADDRESS_3
+ ...
+ 1000 deny any log
+exit
+!
+snmp-server group GROUP_NAME V3 PRiv access SNMP_ACL_NAME
+!
+snmp-server user USERNAME GROUP_NAME V3 Auth sha KEY_STRING_1 priv aes 128 KEY_STRING_2
+!
+snmp-server enable traps
+!
+snmp-server host SERVER_ADDRESS informs version 3 priv USERNAME
+!
+================================================
+
+Hardening Configuration
+================================================
+conf t
+!
+int vlan 1
+ shutdown
+!
+int UNUSED_INTERFACE
+ des DESCRIPTION
+ sw host
+ sw access vlan FAKE_VLAN_ID
+ sw nonegotiate
+ sw port-security
+ sw port-security max MAX_NUM
+ sw port-security mac sticky
+ sw port-security violation restrict
+ spanning-tree bpduguard enable
+ ip dhcp snooping limit rate PPS
+ no vtp
+ no cdp enable
+ no lldp transmit
+ no lldp receive
+exit
+!
+no ip domain-lookup
+!
+banner exec ^C TEXT ^C
+banner login ^C TEXT ^C
+banner motd ^C TEXT ^C
+!
+ip dhcp bootp ignore
+!
+no service dhcp
+!
+service tcp-keepalives-in
+!
+service tcp-keepalives-out
+!
+no service pad
+!
+no ip http server
+!
+no ip http secure-server
+!
+no ip source-route
+!
+service password-encryption
+!
+
+================================================
+write
+!
+
+
+
+

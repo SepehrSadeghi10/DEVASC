@@ -1,0 +1,43 @@
+SW1==========================
+conf t
+!
+switch virtual domain 100
+ switch 1
+exit
+!
+int po1
+ switchport
+ switch virtual link 1
+ no shut
+!
+int ra te1/31-32
+ channel-group 1 mode on
+ no shut
+exit
+!
+exit
+!
+switch convert mode virtual
+!
+
+SW2==========================
+conf t
+!
+switch virtual domain 100
+ switch 2
+exit
+!
+int po2
+ switchport
+ switch virtual link 2
+ no shut
+!
+int ra te1/31-32
+ channel-group 2 mode on
+ no shut
+exit
+!
+exit
+!
+switch convert mode virtual
+!
