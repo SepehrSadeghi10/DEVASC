@@ -19,7 +19,8 @@ exit
 !
 switch convert mode virtual
 !
-!!local!!
+
+
 SW2==========================
 conf t
 !
